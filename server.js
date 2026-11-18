@@ -28,6 +28,8 @@ app.use(helmet({contentSecurityPolicy:false,crossOriginResourcePolicy:{policy:"c
 app.use(express.json({limit:"12kb",type:["application/json","text/plain"]}));
 app.get("/health",(_,res)=>res.send("ok"));
 app.get("/tracker.js",(_,res)=>res.type("application/javascript").set("Access-Control-Allow-Origin",origin).send(TRACKER));
+app.get("/site-consent.js",(_,res)=>res.set("Cache-Control","no-store").type("application/javascript").sendFile(resolve("public/site-consent.js")));
+app.get("/site-consent.css",(_,res)=>res.set("Cache-Control","no-store").type("text/css").sendFile(resolve("public/preview-consent.css")));
 const cors=(req,res,next)=>{if(req.get("origin")!==origin)return res.sendStatus(403);res.set("Access-Control-Allow-Origin",origin);res.set("Vary","Origin");next()};
 app.options("/api/track",cors,(_,res)=>res.set({"Access-Control-Allow-Methods":"POST,OPTIONS","Access-Control-Allow-Headers":"Content-Type"}).sendStatus(204));
 app.post("/api/track",rateLimit({windowMs:60000,limit:120,standardHeaders:"draft-7",legacyHeaders:false}),cors,(req,res)=>{
