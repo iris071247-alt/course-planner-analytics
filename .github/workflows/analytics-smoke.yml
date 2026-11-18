@@ -1,0 +1,32 @@
+name: Analytics production smoke test
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/analytics-smoke.yml"
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Verify HTTP health
+        run: |
+          set -euo pipefail
+          BASE="https://course-analytics-production-974e741c.up.railway.app"
+          status=$(curl --retry 4 --retry-delay 2 -sS -o /tmp/health -w '%{http_code}' "$BASE/health")
+          test "$status" = "200"
+          grep -qx 'ok' /tmp/health
+          status=$(curl --retry 4 --retry-delay 2 -sS -o /tmp/admin -w '%{http_code}' "$BASE/admin")
+          test "$status" = "200"
+          grep -q '访客分析' /tmp/admin
+          status=$(curl --retry 4 --retry-delay 2 -sS -o /tmp/tracker -w '%{http_code}' "$BASE/tracker.js")
+          test "$status" = "200"
+          grep -q 'CourseAnalytics' /tmp/tracker
+      - name: Verify anonymous event can be written
+        run: |
+          set -euo pipefail
+          BASE="https://course-analytics-production-974e741c.up.railway.app"
+          status=$(curl -sS -o /tmp/response -w '%{http_code}' -X POST "$BASE/api/track" -H 'Origin: https://course-planner-publish-production.up.railway.app' -H 'Content-Type: text/plain' --data '{"visitor":"qa-smoke-20261118","session":"qa-smoke-session-20261118","type":"page_view","path":"/qa-smoke"}')
+          cat /tmp/response
+          test "$status" = "204"
+          echo "Anonymous event accepted and persisted (204)"
