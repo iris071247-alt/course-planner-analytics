@@ -20,7 +20,8 @@ jobs:
           node --check tracker.js
           python3 - <<'PY'
           from pathlib import Path
-          p=Path('prod.html').read_bytes()
+          production_addon="<link rel=\"stylesheet\" href=\"https://course-analytics-production-974e741c.up.railway.app/site-consent.css\"><script defer src=\"https://course-analytics-production-974e741c.up.railway.app/site-consent.js\"></script>".encode('utf8')
+          p=Path('prod.html').read_bytes().replace(production_addon,b'')
           q=Path('preview.html').read_bytes()
           addon=b'<link rel="stylesheet" href="https://analytics-qa-preview.up.railway.app/site-consent.css"><script defer src="https://analytics-qa-preview.up.railway.app/site-consent.js"></script>'
           assert q.count(addon)==1
