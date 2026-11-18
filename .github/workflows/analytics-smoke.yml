@@ -29,6 +29,7 @@ jobs:
           python3 - <<'CHECK'
           from pathlib import Path
           content=Path('/tmp/course.html').read_text('utf-8')
+          print("HTML length",len(content),"tail",repr(content[-250:]),"end tags",content.lower().count("</body"),content.lower().count("</html"),flush=True)
           for needle in ['BUILT_CURRENT_SPRING','hbAMlCk','analytics-opt-in','course_analytics_consent_v1','manual-entry','assist-run','survey-confirm']:
               print(needle,'found' if needle in content else 'MISSING',flush=True)
               assert needle in content, needle
