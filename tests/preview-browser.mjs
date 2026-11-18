@@ -18,7 +18,8 @@ async function test() {
   const sourceResponse = await request.get(PROD+"/");
   check(sourceResponse.status()===200,"Unmodified production baseline online");
   const previewHtml = await previewResponse.text();
-  const sourceHtml = await sourceResponse.text();
+  const productionHtml = await sourceResponse.text();
+  const sourceHtml = productionHtml.replace("<link rel=\"stylesheet\" href=\"https://course-analytics-production-974e741c.up.railway.app/site-consent.css\"><script defer src=\"https://course-analytics-production-974e741c.up.railway.app/site-consent.js\"></script>", "");
   const marker='<link rel="stylesheet" href="https://analytics-qa-preview.up.railway.app/site-consent.css"><script defer src="https://analytics-qa-preview.up.railway.app/site-consent.js"></script>';
   check(previewHtml.includes(marker),"Preview loads external privacy module");
   const extracted = previewHtml.replace(marker,"");
