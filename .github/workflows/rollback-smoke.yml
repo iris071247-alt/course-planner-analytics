@@ -1,0 +1,38 @@
+name: Verify course planner rollback
+on:
+  push:
+    paths:
+      - ".github/workflows/rollback-smoke.yml"
+  workflow_dispatch:
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Verify original course planner HTML is served
+        run: |
+          set -euo pipefail
+          URL="https://course-planner-publish-production.up.railway.app/"
+          code=$(curl --retry 4 --retry-delay 2 -sS -D /tmp/headers -o /tmp/page.html -w '%{http_code}' "$URL")
+          test "$code" = "200"
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          html=Path('/tmp/page.html').read_text('utf-8')
+          headers=Path('/tmp/headers').read_text('utf-8').lower()
+          assert 'content-type: text/html' in headers, 'wrong content-type'
+          assert html.lower().startswith('<!doctype html>'), 'page is not HTML document'
+          required=('BUILT_CURRENT_SPRING','hbAMlCk','manual-entry','assist-run','survey-confirm')
+          for marker in required:
+              assert marker in html, 'Missing existing site feature '+marker
+          assert 'analytics-opt-in' not in html, 'Faulty analytics injection remains'
+          assert 'course_analytics_consent_v1' not in html, 'Old analytics bootstrap remains'
+          assert html.rstrip().lower().endswith('</html>'), 'not a complete HTML document'
+          print('Rollback verified: original page retained, analytics injection absent, document is complete.')
+          print('HTML characters:',len(html))
+          PY
+      - name: Verify no server error
+        run: |
+          set -euo pipefail
+          code=$(curl -sS -o /tmp/health -w '%{http_code}' https://course-planner-publish-production.up.railway.app/health)
+          test "$code" = "200"
