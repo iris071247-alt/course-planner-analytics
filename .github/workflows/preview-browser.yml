@@ -20,7 +20,7 @@ jobs:
       - name: Install Playwright
         run: |
           npm install --no-save --ignore-scripts playwright@1.58.2
-          npx playwright install --with-deps chromium
+          npx playwright install chromium
       - name: Verify QA preview services are ready
         run: |
           set -euo pipefail
