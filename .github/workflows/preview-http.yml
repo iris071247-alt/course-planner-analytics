@@ -14,7 +14,7 @@ jobs:
           set -euo pipefail
           curl --retry 3 -fsS https://course-planner-publish-production.up.railway.app/ -o prod.html
           curl --retry 3 -fsS https://course-preview-preview.up.railway.app/ -o preview.html
-          curl --retry 3 -fsS https://course-preview-preview.up.railway.app/preview-consent.js -o consent.js
+          curl --retry 3 -fsS https://analytics-qa-preview.up.railway.app/site-consent.js -o consent.js
           curl --retry 3 -fsS https://analytics-qa-preview.up.railway.app/tracker.js -o tracker.js
           node --check consent.js
           node --check tracker.js
@@ -22,7 +22,7 @@ jobs:
           from pathlib import Path
           p=Path('prod.html').read_bytes()
           q=Path('preview.html').read_bytes()
-          addon=b'<link rel="stylesheet" href="/preview-consent.css"><script defer src="/preview-consent.js"></script>'
+          addon=b'<link rel="stylesheet" href="https://analytics-qa-preview.up.railway.app/site-consent.css"><script defer src="https://analytics-qa-preview.up.railway.app/site-consent.js"></script>'
           assert q.count(addon)==1
           assert q.replace(addon,b'')==p
           assert p.startswith(b'<!doctype html>')
