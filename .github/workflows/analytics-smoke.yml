@@ -26,13 +26,13 @@ jobs:
         run: |
           set -euo pipefail
           curl --retry 4 --retry-delay 2 -fsS "https://course-planner-publish-production.up.railway.app/" -o /tmp/course.html
-          grep -q 'BUILT_CURRENT_SPRING' /tmp/course.html
-          grep -q 'hbAMlCk' /tmp/course.html
-          grep -q 'analytics-opt-in' /tmp/course.html
-          grep -q 'course_analytics_consent_v1' /tmp/course.html
-          grep -q 'manual-entry' /tmp/course.html
-          grep -q 'assist-run' /tmp/course.html
-          grep -q 'survey-confirm' /tmp/course.html
+          python3 - <<'CHECK'
+          from pathlib import Path
+          content=Path('/tmp/course.html').read_text('utf-8')
+          for needle in ['BUILT_CURRENT_SPRING','hbAMlCk','analytics-opt-in','course_analytics_consent_v1','manual-entry','assist-run','survey-confirm']:
+              print(needle,'found' if needle in content else 'MISSING',flush=True)
+              assert needle in content, needle
+          CHECK
           python3 - <<'PY'
           import re
           src=open('/tmp/course.html',encoding='utf-8').read()
