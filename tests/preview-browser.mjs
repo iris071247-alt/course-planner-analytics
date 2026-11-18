@@ -19,7 +19,7 @@ async function test() {
   check(sourceResponse.status()===200,"Unmodified production baseline online");
   const previewHtml = await previewResponse.text();
   const sourceHtml = await sourceResponse.text();
-  const marker='<link rel="stylesheet" href="/preview-consent.css"><script defer src="/preview-consent.js"></script>';
+  const marker='<link rel="stylesheet" href="https://analytics-qa-preview.up.railway.app/site-consent.css"><script defer src="https://analytics-qa-preview.up.railway.app/site-consent.js"></script>';
   check(previewHtml.includes(marker),"Preview loads external privacy module");
   const extracted = previewHtml.replace(marker,"");
   check(extracted===sourceHtml,"Preview page equals the current production HTML byte-for-byte after removing the preview-only addition");
