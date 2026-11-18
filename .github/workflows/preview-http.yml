@@ -1,0 +1,33 @@
+name: Preview HTTP and HTML integrity
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/preview-http.yml"
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 4
+    steps:
+      - name: Compare preview page byte-for-byte with live production
+        run: |
+          set -euo pipefail
+          curl --retry 3 -fsS https://course-planner-publish-production.up.railway.app/ -o prod.html
+          curl --retry 3 -fsS https://course-preview-preview.up.railway.app/ -o preview.html
+          curl --retry 3 -fsS https://course-preview-preview.up.railway.app/preview-consent.js -o consent.js
+          curl --retry 3 -fsS https://analytics-qa-preview.up.railway.app/tracker.js -o tracker.js
+          node --check consent.js
+          node --check tracker.js
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('prod.html').read_bytes()
+          q=Path('preview.html').read_bytes()
+          addon=b'<link rel="stylesheet" href="/preview-consent.css"><script defer src="/preview-consent.js"></script>'
+          assert q.count(addon)==1
+          assert q.replace(addon,b'')==p
+          assert p.startswith(b'<!doctype html>')
+          assert p.rstrip().endswith(b'</html>')
+          assert b'BUILT_CURRENT_SPRING' in p and b'hbAMlCk' in p
+          assert b'manual-entry' in p and b'assist-run' in p and b'survey-confirm' in p
+          print('PASS source byte match, intact original features, script syntax OK')
+          PY
