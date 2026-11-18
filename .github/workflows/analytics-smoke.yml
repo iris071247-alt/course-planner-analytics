@@ -22,6 +22,26 @@ jobs:
           status=$(curl --retry 4 --retry-delay 2 -sS -o /tmp/tracker -w '%{http_code}' "$BASE/tracker.js")
           test "$status" = "200"
           grep -q 'CourseAnalytics' /tmp/tracker
+      - name: Verify production website retained original functionality and added consent
+        run: |
+          set -euo pipefail
+          curl --retry 4 --retry-delay 2 -fsS "https://course-planner-publish-production.up.railway.app/" -o /tmp/course.html
+          grep -q 'BUILT_CURRENT_SPRING' /tmp/course.html
+          grep -q 'hbAMlCk' /tmp/course.html
+          grep -q 'analytics-opt-in' /tmp/course.html
+          grep -q 'course_analytics_consent_v1' /tmp/course.html
+          grep -q 'manual-entry' /tmp/course.html
+          grep -q 'assist-run' /tmp/course.html
+          grep -q 'survey-confirm' /tmp/course.html
+          python3 - <<'PY'
+          import re
+          src=open('/tmp/course.html',encoding='utf-8').read()
+          matches=re.findall(r'<script id="analytics-opt-in">([\\s\\S]*?)</script>',src)
+          assert len(matches)==1, f"consent script count {len(matches)}"
+          open('/tmp/consent.js','w').write(matches[0])
+          print('Production consent script extracted:',len(matches[0]))
+          PY
+          node --check /tmp/consent.js
       - name: Verify anonymous event can be written
         run: |
           set -euo pipefail
