@@ -20,8 +20,8 @@ async function loadProductionHtml() {
     const closingBody = text.toLowerCase().lastIndexOf("</body>");
     if (closingBody < text.length - 1500 || closingBody < 10000) throw new Error("Unable to find final closing body tag");
     const html = text.slice(0, closingBody) +
-      '<link rel="stylesheet" href="/preview-consent.css">' +
-      '<script defer src="/preview-consent.js"></script>' +
+      '<link rel="stylesheet" href="' + ORIGIN + '/site-consent.css">' +
+      '<script defer src="' + ORIGIN + '/site-consent.js"></script>' +
       text.slice(closingBody);
     cache = { html, sourceHash: createHash("sha256").update(text).digest("hex"), sourceBytes: Buffer.byteLength(text), previewBytes: Buffer.byteLength(html) };
     cachedAt = Date.now();
