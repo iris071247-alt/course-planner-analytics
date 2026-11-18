@@ -15,7 +15,8 @@ async function loadProductionHtml() {
   try {
     const resp = await fetch(LIVE_URL, { headers: { "Accept": "text/html" }, signal: AbortSignal.timeout(16000) });
     if (!resp.ok || !resp.headers.get("content-type")?.includes("text/html")) throw new Error("Production did not send valid HTML");
-    const text = await resp.text();
+    const productionAddon = '<link rel="stylesheet" href="https://course-analytics-production-974e741c.up.railway.app/site-consent.css"><script defer src="https://course-analytics-production-974e741c.up.railway.app/site-consent.js"></script>';
+    const text = (await resp.text()).replace(productionAddon, "");
     if (text.length < 200000 || !/^<!doctype html>/i.test(text.trimStart()) || !text.includes("BUILT_CURRENT_SPRING") || !text.includes("hbAMlCk")) throw new Error("Unexpected production HTML signature");
     const closingBody = text.toLowerCase().lastIndexOf("</body>");
     if (closingBody < text.length - 1500 || closingBody < 10000) throw new Error("Unable to find final closing body tag");
