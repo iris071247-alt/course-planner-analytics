@@ -1,0 +1,43 @@
+name: Preview Chromium browser E2E (isolated)
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/preview-browser.yml"
+      - "tests/preview-browser.mjs"
+      - "preview-server.js"
+      - "public/preview-consent.js"
+      - "public/preview-consent.css"
+jobs:
+  chromium-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Playwright
+        run: |
+          npm install --no-save --ignore-scripts playwright@1.58.2
+          npx playwright install --with-deps chromium
+      - name: Verify QA preview services are ready
+        run: |
+          set -euo pipefail
+          for url in https://course-preview-preview.up.railway.app/health https://analytics-qa-preview.up.railway.app/health; do
+            ok=0
+            for attempt in $(seq 1 25); do
+              if [ "$(curl --connect-timeout 5 -sS -o /dev/null -w '%{http_code}' "$url" || true)" = "200" ]; then ok=1;break;fi
+              sleep 4
+            done
+            test "$ok" = "1"
+          done
+      - name: Test real browser privacy and event reporting
+        run: node tests/preview-browser.mjs
+      - name: Upload preview screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: isolated-preview-chromium-screenshots
+          path: preview-*.png
+          if-no-files-found: ignore
